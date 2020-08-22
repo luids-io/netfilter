@@ -4,7 +4,6 @@ package ipp
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/luids-io/netfilter/pkg/nfqueue"
 	"github.com/luids-io/netfilter/pkg/nfqueue/builder"
@@ -26,19 +25,14 @@ func Builder() builder.BuildPluginFn {
 				}
 				tlsaction, ok := action.(Action)
 				if !ok {
-					return nil, fmt.Errorf("building action '%s' in plugin '%s': can't cast to tlsp.Action", actionDef.Name, def.Name)
+					return nil, errors.New("can't cast to tlsp.Action")
 				}
 				cfg.Actions = append(cfg.Actions, tlsaction)
 			}
 		}
-		return NewPlugin(def.Name, cfg, b.Logger())
+		return New(def.Name, cfg, b.Logger())
 	}
 }
-
-const (
-	// PluginClass registered
-	PluginClass = "ipp"
-)
 
 func init() {
 	builder.RegisterPluginBuilder(PluginClass, Builder())

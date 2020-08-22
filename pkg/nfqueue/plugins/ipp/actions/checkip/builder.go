@@ -8,6 +8,7 @@ import (
 
 	"github.com/luids-io/api/event"
 	"github.com/luids-io/api/xlist"
+	"github.com/luids-io/core/option"
 	"github.com/luids-io/netfilter/pkg/nfqueue"
 	"github.com/luids-io/netfilter/pkg/nfqueue/builder"
 	"github.com/luids-io/netfilter/pkg/nfqueue/plugins/ipp"
@@ -27,7 +28,7 @@ func Builder() builder.BuildActionFn {
 			return nil, err
 		}
 		cfg.LocalNets = b.LocalNets()
-		return NewAction(fmt.Sprintf("%s.%s", pname, def.Name), service, cfg, b.Logger())
+		return New(fmt.Sprintf("%s.%s", pname, def.Name), service, cfg, b.Logger())
 	}
 }
 
@@ -53,34 +54,43 @@ func getService(b *builder.Builder, def builder.ActionDef) (xlist.Checker, error
 func parseConfig(def builder.ActionDef) (Config, error) {
 	var cfg Config
 	var err error
-	if def.Policy == nil {
-		return cfg, err
+	for _, rule := range def.Rules {
+		switch rule.When {
+		case "listed":
+			cfg.WhenListed, err = toRule(rule.Rule)
+			if err != nil {
+				return cfg, err
+			}
+		case "unlisted":
+			cfg.WhenUnlisted, err = toRule(rule.Rule)
+			if err != nil {
+				return cfg, err
+			}
+		}
 	}
-	if def.Policy.Merge {
-		cfg.Merge = true
-	}
-	if def.Policy.OnError != "" {
-		cfg.OnError, err = nfqueue.ToVerdict(def.Policy.OnError)
+	if def.OnError != "" {
+		cfg.OnError, err = nfqueue.ToVerdict(def.OnError)
 		if err != nil {
 			return cfg, err
 		}
 	}
-	if def.Policy.Positive != nil {
-		cfg.Positive, err = toRule(*def.Policy.Positive)
+	if def.Opts != nil {
+		s, ok, err := option.String(def.Opts, "mode")
 		if err != nil {
 			return cfg, err
 		}
-	}
-	if def.Policy.Negative != nil {
-		cfg.Negative, err = toRule(*def.Policy.Negative)
-		if err != nil {
-			return cfg, err
+		if ok {
+			cfg.Mode, err = toMode(s)
+			if err != nil {
+				return cfg, err
+			}
 		}
 	}
 	return cfg, nil
 }
 
 func toRule(def builder.RuleDef) (rule Rule, err error) {
+	rule.Merge = def.Merge
 	rule.EventLevel, rule.EventRaise, err = event.ToEventLevel(def.Event)
 	if err != nil {
 		return
@@ -93,10 +103,19 @@ func toRule(def builder.RuleDef) (rule Rule, err error) {
 	return
 }
 
-const (
-	// ActionClass defines action name
-	ActionClass = "checkip"
-)
+func toMode(s string) (m Mode, err error) {
+	switch s {
+	case "", "both":
+		m = CheckBoth
+	case "src":
+		m = CheckSrc
+	case "dst":
+		m = CheckDst
+	default:
+		err = fmt.Errorf("invalid checkmode '%s'", s)
+	}
+	return
+}
 
 func init() {
 	builder.RegisterActionBuilder(ipp.PluginClass, ActionClass, Builder())

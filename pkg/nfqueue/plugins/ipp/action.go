@@ -7,5 +7,5 @@ import "github.com/luids-io/netfilter/pkg/nfqueue"
 // Action defines interface action
 type Action interface {
 	nfqueue.Action
-	RegisterIP(*Hooks)
+	Register(*Hooks)
 }

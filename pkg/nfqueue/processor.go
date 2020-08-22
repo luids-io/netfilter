@@ -206,7 +206,7 @@ func (q *queue) dispatch(a nfq.Attribute) int {
 		if layer != nil {
 			v, errs := q.hrunner.Packet(layerType, packet, ts)
 			for _, err := range errs {
-				q.errorCh <- fmt.Errorf("on packet qid(#%v): %v", q.qid, err)
+				q.errorCh <- NewError(packet, fmt.Errorf("on packet qid(#%v): %v", q.qid, err))
 			}
 			if v != Default {
 				verdict = v

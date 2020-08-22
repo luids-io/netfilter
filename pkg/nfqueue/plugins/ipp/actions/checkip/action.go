@@ -19,61 +19,62 @@ import (
 	"github.com/luids-io/netfilter/pkg/nfqueue/plugins/ipp"
 )
 
+// ActionClass defines action name
+const ActionClass = "checkip"
+
 // Event registered codes
 const (
 	NetListedIP   event.Code = 10010
 	NetUnlistedIP event.Code = 10011
 )
 
-// Action register hooks to check sni of clienthellos
-type Action struct {
-	ipp.Action
-	name      string
-	positive  Rule
-	negative  Rule
-	onError   nfqueue.Verdict
-	merge     bool
-	cmode     CheckMode
-	checker   xlist.Checker
-	localnets []*net.IPNet
-	logger    yalogi.Logger
+// Config stores configuration for action
+type Config struct {
+	Mode      Mode
+	LocalNets []*net.IPNet
+	//rules
+	WhenListed   Rule
+	WhenUnlisted Rule
+	OnError      nfqueue.Verdict
 }
-
-// CheckMode sets mode for checking
-type CheckMode int
-
-//Available values
-const (
-	ModeBoth CheckMode = iota
-	ModeSrc
-	ModeDst
-)
 
 // Rule stores information
 type Rule struct {
+	Merge      bool
 	EventRaise bool
 	EventLevel event.Level
 	Verdict    nfqueue.Verdict
 	Log        bool
 }
 
-// Config stores configuration for action
-type Config struct {
-	Positive  Rule
-	Negative  Rule
-	Merge     bool
-	OnError   nfqueue.Verdict
-	Mode      CheckMode
-	LocalNets []*net.IPNet
+// Mode sets mode for checking
+type Mode int
+
+//Available values
+const (
+	CheckBoth Mode = iota
+	CheckSrc
+	CheckDst
+)
+
+// Action checks ip addresses against an xlist service
+type Action struct {
+	name      string
+	listed    Rule
+	unlisted  Rule
+	onError   nfqueue.Verdict
+	cmode     Mode
+	checker   xlist.Checker
+	localnets []*net.IPNet
+	logger    yalogi.Logger
 }
 
-// NewAction returns a instance
-func NewAction(aname string, c xlist.Checker, cfg Config, l yalogi.Logger) (*Action, error) {
+// New returns a new instance
+func New(aname string, c xlist.Checker, cfg Config, l yalogi.Logger) (*Action, error) {
 	p := &Action{
 		name:      aname,
-		positive:  cfg.Positive,
-		negative:  cfg.Negative,
-		merge:     cfg.Merge,
+		listed:    cfg.WhenListed,
+		unlisted:  cfg.WhenUnlisted,
 		onError:   cfg.OnError,
 		cmode:     cfg.Mode,
 		localnets: cfg.LocalNets,
@@ -83,23 +84,23 @@ func NewAction(aname string, c xlist.Checker, cfg Config, l yalogi.Logger) (*Act
 	return p, nil
 }
 
-// Name implements nfqueue.Plugin interface
+// Name implements ipp.Action interface
 func (a *Action) Name() string {
 	return a.name
 }
 
-// Class implements nfqueue.Plugin interface
+// Class implements ipp.Action interface
 func (a *Action) Class() string {
 	return ActionClass
 }
 
-// PluginClass implements nfqueue.Plugin interface
+// PluginClass implements ipp.Action interface
 func (a *Action) PluginClass() string {
 	return ipp.PluginClass
 }
 
-// RegisterIP adds hooks to ip process
-func (a *Action) RegisterIP(hooks *ipp.Hooks) {
+// Register implements ipp.Action interface
+func (a *Action) Register(hooks *ipp.Hooks) {
 	a.logger.Debugf("registering hooks %s", a.name)
 
 	hooks.OnPacketIPv4(func(packet gopacket.Packet, ip4 *layers.IPv4, ts time.Time) (nfqueue.Verdict, error) {
@@ -118,20 +119,23 @@ func (a *Action) RegisterIP(hooks *ipp.Hooks) {
 }
 
 func (a *Action) doCheck(src, dst net.IP, res xlist.Resource) (nfqueue.Verdict, error) {
+	// check ips in xlist
 	resp, err := a.checkIPs(src, dst, res)
 	if err != nil {
 		return a.onError, fmt.Errorf("%s: check %v: %v", a.name, resp.ip, err)
 	}
-	rule := a.negative
+	// process response and assigns rule
+	rule := a.unlisted
 	if resp.r.Result {
-		rule = a.positive
-		if a.merge {
+		rule = a.listed
+		if rule.Merge {
 			rule, err = mergeReason(rule, resp.r.Reason)
 			if err != nil {
 				return a.onError, fmt.Errorf("%s: check %v: %v", a.name, resp.ip, err)
 			}
 		}
 	}
+	// do rule
 	if rule.Log {
 		a.logger.Infof("%s: %v->%v %v %+v", a.name, src, dst, resp.ip, resp.r)
 	}
@@ -158,14 +162,14 @@ type response struct {
 func (a *Action) checkIPs(src, dst net.IP, res xlist.Resource) (response, error) {
 	var err error
 	var resp response
-	if (a.cmode == ModeSrc || a.cmode == ModeBoth) && !a.isLocal(src) {
+	if (a.cmode == CheckSrc || a.cmode == CheckBoth) && !a.isLocal(src) {
 		resp.r, err = a.checker.Check(context.Background(), src.String(), res)
 		if resp.r.Result || err != nil {
 			resp.ip = src
 			return resp, err
 		}
 	}
-	if (a.cmode == ModeDst || a.cmode == ModeBoth) && !a.isLocal(dst) {
+	if (a.cmode == CheckDst || a.cmode == CheckBoth) && !a.isLocal(dst) {
 		resp.r, err = a.checker.Check(context.Background(), dst.String(), res)
 		if resp.r.Result {
 			resp.ip = dst

@@ -15,7 +15,7 @@ import (
 	"github.com/luids-io/netfilter/pkg/nfqueue"
 )
 
-// Builder constructs actions using a definition struct
+// Builder constructs plugins and actions using definitions
 type Builder struct {
 	opts   options
 	logger yalogi.Logger
@@ -117,11 +117,11 @@ func (b *Builder) BuildPlugin(def PluginDef) (nfqueue.Plugin, error) {
 	//get builder
 	customb, ok := registryPluginBuilder[def.Class]
 	if !ok {
-		return nil, fmt.Errorf("can't find a builder for '%s' in '%s'", def.Class, def.Name)
+		return nil, fmt.Errorf("can't find a builder for '%s'", def.Class)
 	}
 	n, err := customb(b, def) //builds
 	if err != nil {
-		return nil, fmt.Errorf("building '%s': %v", def.Name, err)
+		return nil, err
 	}
 	//register
 	b.plugins[def.Name] = true
@@ -135,28 +135,28 @@ func (b *Builder) BuildAction(pname, pclass string, def ActionDef) (nfqueue.Acti
 	if def.Name == "" {
 		return nil, errors.New("name field is required")
 	}
-	fname := fmt.Sprintf("%s.%s", pname, def.Name)
-	fclass := fmt.Sprintf("%s.%s", pclass, def.Class)
+	aname := fmt.Sprintf("%s.%s", pname, def.Name)
+	aclass := fmt.Sprintf("%s.%s", pclass, def.Class)
 	//check if exists
-	_, ok := b.actions[fname]
+	_, ok := b.actions[aname]
 	if ok {
 		return nil, errors.New("'%s' exists")
 	}
 	//check if disabled
 	if def.Disabled {
-		return nil, fmt.Errorf("'%s' is disabled", fname)
+		return nil, fmt.Errorf("'%s' is disabled", aname)
 	}
 	//get builder
-	customb, ok := registryActionBuilder[fclass]
+	customb, ok := registryActionBuilder[aclass]
 	if !ok {
-		return nil, fmt.Errorf("can't find a builder for '%s' in '%s'", fclass, fname)
+		return nil, fmt.Errorf("can't find a builder for '%s'", aclass)
 	}
 	n, err := customb(b, pname, def) //builds
 	if err != nil {
-		return nil, fmt.Errorf("building '%s': %v", fname, err)
+		return nil, err
 	}
 	//register
-	b.actions[fname] = true
+	b.actions[aname] = true
 	return n, nil
 }
 

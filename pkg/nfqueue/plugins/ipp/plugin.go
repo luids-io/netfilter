@@ -13,6 +13,9 @@ import (
 	"github.com/luids-io/netfilter/pkg/nfqueue"
 )
 
+// PluginClass registered
+const PluginClass = "ipp"
+
 // Config stores configuration for plugin creation
 type Config struct {
 	Actions []Action
@@ -20,15 +23,14 @@ type Config struct {
 
 // Plugin implementation
 type Plugin struct {
-	nfqueue.Plugin
 	name   string
 	logger yalogi.Logger
 	//internals
 	hrunner *hooksRunner
 }
 
-// NewPlugin returns a plugin instance
-func NewPlugin(pname string, cfg Config, l yalogi.Logger) (*Plugin, error) {
+// New returns a new plugin instance
+func New(pname string, cfg Config, l yalogi.Logger) (*Plugin, error) {
 	p := &Plugin{name: pname, logger: l}
 	err := p.init(cfg)
 	if err != nil {
@@ -41,7 +43,7 @@ func (p *Plugin) init(cfg Config) error {
 	//create and register hooks from actions
 	hooks := NewHooks()
 	for _, action := range cfg.Actions {
-		action.RegisterIP(hooks)
+		action.Register(hooks)
 	}
 	p.hrunner = newHooksRunner(hooks)
 	return nil
@@ -58,7 +60,7 @@ func (p *Plugin) Class() string {
 }
 
 // Register implements nfqueue.Plugin interface
-func (p *Plugin) Register(source string, hooks *nfqueue.Hooks) {
+func (p *Plugin) Register(qid int, hooks *nfqueue.Hooks) {
 	//register packets ip4
 	hooks.OnPacket(layers.LayerTypeIPv4,
 		func(packet gopacket.Packet, ts time.Time) (nfqueue.Verdict, error) {

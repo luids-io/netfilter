@@ -20,8 +20,6 @@ type PluginDef struct {
 	Services map[string]string `json:"services,omitempty"`
 	// Actions is a list of actions
 	Actions []ActionDef `json:"actions,omitempty"`
-	// Args is a list of args for plugin
-	Args []string `json:"args,omitempty"`
 	// Opts allow optional fields
 	Opts map[string]interface{} `json:"opts,omitempty"`
 }
@@ -36,32 +34,28 @@ type ActionDef struct {
 	Disabled bool `json:"disabled"`
 	// Services is a map of services used by plugin
 	Services map[string]string `json:"services,omitempty"`
-	// Policy defines ruleset
-	Policy *RuleSetDef `json:"policy,omitempty"`
-	// Args is a list of args for action
-	Args []string `json:"args,omitempty"`
+	// Rules is a list of ruleset definitions
+	Rules []RuleItemDef `json:"rules,omitempty"`
+	// OnError stores on error verdict
+	OnError string `json:"onerror,omitempty"`
 	// Opts allow optional fields
 	Opts map[string]interface{} `json:"opts,omitempty"`
 }
 
-// RuleSetDef defines a set of rules
-type RuleSetDef struct {
-	// Positive stores actions to do when positive matching
-	Positive *RuleDef `json:"positive,omitempty"`
-	// Negative stores actions to do when negative matching
-	Negative *RuleDef `json:"negative,omitempty"`
-	// Merge stores merge option
-	Merge bool `json:"merge,omitempty"`
-	// OnError stores on error verdict
-	OnError string `json:"onerror,omitempty"`
+// RuleItemDef defines a set of rules
+type RuleItemDef struct {
+	// When defines condition
+	When string `json:"when"`
+	// Rule stores definition
+	Rule RuleDef `json:"rule"`
 }
 
 // RuleDef stores information about rules
 type RuleDef struct {
+	// Merge option
+	Merge bool `json:"merge,omitempty"`
 	// Event stores event level
 	Event string `json:"event,omitempty"`
-	// Tags used when the rule is applied
-	Tags []string `json:"tags,omitempty"`
 	// Log enable logging in action
 	Log bool `json:"log"`
 	// Verdict stores verdict to firewall processors
