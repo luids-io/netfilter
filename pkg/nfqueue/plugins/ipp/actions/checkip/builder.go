@@ -17,18 +17,22 @@ import (
 // Builder returns a builder function
 func Builder() builder.BuildActionFn {
 	return func(b *builder.Builder, pname string, def builder.ActionDef) (nfqueue.Action, error) {
+		// sanity checks
+		if def.Name == "" {
+			return nil, errors.New("'name' is required")
+		}
+		aname := fmt.Sprintf("%s.%s", pname, def.Name)
 		//gets service
 		service, err := getService(b, def)
 		if err != nil {
 			return nil, err
 		}
 		//gets config
-		cfg, err := parseConfig(def)
+		cfg, err := getConfig(b, def)
 		if err != nil {
 			return nil, err
 		}
-		cfg.LocalNets = b.LocalNets()
-		return New(fmt.Sprintf("%s.%s", pname, def.Name), service, cfg, b.Logger())
+		return New(aname, service, cfg, b.Logger())
 	}
 }
 
@@ -51,9 +55,10 @@ func getService(b *builder.Builder, def builder.ActionDef) (xlist.Checker, error
 	return c, nil
 }
 
-func parseConfig(def builder.ActionDef) (Config, error) {
+func getConfig(b *builder.Builder, def builder.ActionDef) (Config, error) {
 	var cfg Config
 	var err error
+	cfg.LocalNets = b.LocalNets()
 	for _, rule := range def.Rules {
 		switch rule.When {
 		case "listed":
@@ -112,7 +117,7 @@ func toMode(s string) (m Mode, err error) {
 	case "dst":
 		m = CheckDst
 	default:
-		err = fmt.Errorf("invalid checkmode '%s'", s)
+		err = fmt.Errorf("invalid mode '%s'", s)
 	}
 	return
 }

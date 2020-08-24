@@ -3,7 +3,7 @@
 package ipp
 
 import (
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/gopacket"
@@ -60,13 +60,13 @@ func (p *Plugin) Class() string {
 }
 
 // Register implements nfqueue.Plugin interface
-func (p *Plugin) Register(qid int, hooks *nfqueue.Hooks) {
+func (p *Plugin) Register(hooks *nfqueue.Hooks) {
 	//register packets ip4
 	hooks.OnPacket(layers.LayerTypeIPv4,
 		func(packet gopacket.Packet, ts time.Time) (nfqueue.Verdict, error) {
 			ip4, ok := packet.Layer(layers.LayerTypeIPv4).(*layers.IPv4)
 			if !ok {
-				return nfqueue.Default, errors.New("can't get ip4 layer")
+				return nfqueue.Default, fmt.Errorf("%s: can't get ip4 layer", p.name)
 			}
 			return p.hrunner.PacketIPv4(packet, ip4, ts)
 		})
@@ -75,7 +75,7 @@ func (p *Plugin) Register(qid int, hooks *nfqueue.Hooks) {
 		func(packet gopacket.Packet, ts time.Time) (nfqueue.Verdict, error) {
 			ip6, ok := packet.Layer(layers.LayerTypeIPv6).(*layers.IPv6)
 			if !ok {
-				return nfqueue.Default, errors.New("can't get ip6 layer")
+				return nfqueue.Default, fmt.Errorf("%s: can't get ip4 layer", p.name)
 			}
 			return p.hrunner.PacketIPv6(packet, ip6, ts)
 		})

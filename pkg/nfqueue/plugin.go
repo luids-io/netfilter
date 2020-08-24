@@ -11,7 +11,7 @@ type Plugin interface {
 	// Class returns the class name of the plugin
 	Class() string
 	// Register add hooks to a the packet processing pipeline
-	Register(qid int, hooks *Hooks)
+	Register(hooks *Hooks)
 	// Layers returns layers required by the plugin
 	Layers() []gopacket.LayerType
 	// CleanUp of the plugin

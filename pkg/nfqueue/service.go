@@ -156,7 +156,7 @@ func (s *PacketService) doStart(src *queueSource) error {
 	s.logger.Infof("starting nfqueue #%v", src.qid)
 	hooks := NewHooks()
 	for _, p := range s.plugins {
-		p.Register(src.qid, hooks)
+		p.Register(hooks)
 	}
 	var err error
 	src.stop, src.errCh, err = s.proc.Process(src.qid, hooks)
