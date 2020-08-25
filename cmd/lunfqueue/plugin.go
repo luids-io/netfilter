@@ -14,4 +14,5 @@ import (
 
 	// actions
 	_ "github.com/luids-io/netfilter/pkg/nfqueue/plugins/ipp/actions/checkip"
+	_ "github.com/luids-io/netfilter/pkg/nfqueue/plugins/ipp/actions/checkresolv"
 )
