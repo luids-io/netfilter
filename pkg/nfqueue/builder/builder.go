@@ -172,7 +172,7 @@ func (b Builder) APIService(name string) (apiservice.Service, bool) {
 
 // LocalNets return localnets
 func (b Builder) LocalNets() []*net.IPNet {
-	var c []*net.IPNet
+	c := make([]*net.IPNet, len(b.localNets), len(b.localNets))
 	copy(c, b.localNets)
 	return c
 }
