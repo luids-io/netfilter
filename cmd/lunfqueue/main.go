@@ -72,7 +72,7 @@ func main() {
 	}
 
 	// creates main server manager
-	msrv := serverd.New(serverd.SetLogger(logger))
+	msrv := serverd.New(Program, serverd.SetLogger(logger))
 
 	// create api services and register
 	apisvc, err := createAPIServices(msrv, logger)
