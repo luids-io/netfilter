@@ -71,6 +71,8 @@ func getConfig(b *builder.Builder, def builder.ActionDef) (Config, error) {
 			if err != nil {
 				return cfg, err
 			}
+		default:
+			return cfg, fmt.Errorf("unexpected rule when '%s'", rule.When)
 		}
 	}
 	if def.OnError != "" {
