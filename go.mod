@@ -9,9 +9,9 @@ require (
 	github.com/google/gopacket v1.1.18
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
-	github.com/luids-io/api v0.0.0-20200825093018-7a02be49018a
-	github.com/luids-io/common v0.0.0-20200825093111-d4971b452a3b
-	github.com/luids-io/core v0.0.0-20200825092904-85776788e24d
+	github.com/luids-io/api v0.0.0-20200827074632-ff5f67cd83b3
+	github.com/luids-io/common v0.0.0-20200826083409-0e87210e17ca
+	github.com/luids-io/core v0.0.0-20200826065814-376a6c959b32
 	github.com/luisguillenc/tlslayer v0.0.0-20200514135550-a8d356c888c6
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/sirupsen/logrus v1.6.0
