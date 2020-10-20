@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/luids-io/api/event"
-	"github.com/luids-io/api/event/notifybuffer"
 	cconfig "github.com/luids-io/common/config"
 	cfactory "github.com/luids-io/common/factory"
 	"github.com/luids-io/core/apiservice"
@@ -56,11 +55,10 @@ func createAPIServices(msrv *serverd.Manager, logger yalogi.Logger) (apiservice.
 func setupEventNotify(registry apiservice.Discover, msrv *serverd.Manager, logger yalogi.Logger) error {
 	cfgEvent := cfg.Data("ids.event").(*cconfig.EventNotifyCfg)
 	if !cfgEvent.Empty() {
-		client, err := cfactory.EventNotify(cfgEvent, registry)
+		ebuffer, err := cfactory.EventNotifyBuffer(cfgEvent, registry, logger)
 		if err != nil {
 			return err
 		}
-		ebuffer := notifybuffer.New(client, cfgEvent.Buffer, notifybuffer.SetLogger(logger))
 		msrv.Register(serverd.Service{
 			Name:     "ids.event",
 			Shutdown: func() { ebuffer.Close() },

@@ -31,7 +31,7 @@ func Default(program string) *goconfig.Config {
 			Name:     "ids.event",
 			Required: false,
 			Data: &cconfig.EventNotifyCfg{
-				Buffer: 100,
+				Buffer: 1024,
 			},
 		},
 		goconfig.Section{
