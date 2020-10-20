@@ -3,7 +3,7 @@
 ## Configuration variables. 
 NAME="netfilter"
 RELEASE="RELEASE"
-ARCH="amd64"
+ARCH="${ARCH:-amd64}"
 
 ## Base dirs
 BIN_DIR=/usr/local/bin
