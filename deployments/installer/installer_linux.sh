@@ -58,7 +58,7 @@ echo
 
 show_actions() {
 	echo "Warning! This script will commit the following changes to your system:"
-	echo ". Download and install binaries in '${BIN_DIR}'"
+	echo ". Download and install $ARCH binaries in '${BIN_DIR}'"
 	echo ". Create system group '${SVC_GROUP}'"
 	echo ". Create system user '${SVC_USER}'"
 	echo ". Create data dirs in '${VAR_DIR}'"
@@ -285,7 +285,7 @@ create_system_user() {
 
 	user_exists $SVC_USER \
 		&& log "user $SVC_USER already exists" && step_ok && return 0
-	do_create_sysuser $SVC_USER $VAR_DIR $SVC_GROUP
+	do_create_sysuser $SVC_USER $VAR_DIR/$NAME $SVC_GROUP
 	[ $? -ne 0 ] && step_err && return 1
 
 	step_ok
@@ -454,6 +454,10 @@ EOF
 	else
 		log "$SYSTEMD_DIR/luids-lunfqueue@.service already exists"
 	fi
+
+	log "running systemctl daemon-reload"
+	systemctl daemon-reload &>>$LOG_FILE
+	[ $? -ne 0 ] && step_err && return 1
 
 	step_ok
 }
