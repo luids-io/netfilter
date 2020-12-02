@@ -21,7 +21,7 @@ BINARIES="lunfqueue"
 
 ## Download
 DOWNLOAD_BASE="https://github.com/luids-io/${NAME}/releases/download"
-DOWNLOAD_URI="${DOWNLOAD_BASE}/${RELEASE}/${NAME}_${RELEASE}_linux_${ARCH}.tgz"
+DOWNLOAD_URI="${DOWNLOAD_BASE}/v${RELEASE}/${NAME}_${RELEASE}_linux_${ARCH}.tgz"
 
 ##
 
