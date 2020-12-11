@@ -444,7 +444,7 @@ Restart=on-failure
 RestartSec=1
 TimeoutStopSec=3
 User=$SVC_USER
-ExecStart=$BIN_DIR/lunfqueue --config $ETC_DIR/$NAME/%i.toml
+ExecStart=$BIN_DIR/lunfqueue --config $ETC_DIR/$NAME/lunfqueue-%i.toml
 
 [Install]
 WantedBy=multi-user.target
