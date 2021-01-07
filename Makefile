@@ -5,7 +5,7 @@ COMMANDS=lunfqueue
 BINARIES=$(addprefix bin/,$(COMMANDS))
 
 # Used to populate version in binaries
-VERSION=$(shell git describe --match 'v[0-9]*' --dirty='.m' --always)
+VERSION=$(shell git describe --match 'v[0-9]*' --dirty='.m' --always | sed 's/^v//')
 REVISION=$(shell git rev-parse HEAD)$(shell if ! git diff --no-ext-diff --quiet --exit-code; then echo .m; fi)
 DATEBUILD=$(shell date +%FT%T%z)
 

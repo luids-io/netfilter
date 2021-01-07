@@ -392,6 +392,10 @@ files  = [ "${ETC_DIR}/${NAME}/plugins-nfqueue.json" ]
 
 [ids.api]
 files     = [ "${ETC_DIR}/apiservices.json" ]
+
+[log]
+format = "log"
+
 EOF
 		} &>>$LOG_FILE
 		[ $? -ne 0 ] && step_err && return 1
